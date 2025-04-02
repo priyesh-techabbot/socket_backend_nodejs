@@ -37,32 +37,34 @@ io.use((socket, next) => {
 const connectedUsers = {};
 
 io.on("connection", (socket) => {
-    const username = socket.user.username;
-    console.log(`✅ User Connected: ${socket.user} (Socket ID: ${socket.id})`);
+  const username = socket.user.username;
+  console.log(
+    `✅ User Connected: ${socket.user?.username} (Socket ID: ${socket.id})`
+  );
 
-    // Store user socket ID
-    connectedUsers[username] = socket.id;
-    io.emit("update-user-list", Object.keys(connectedUsers)); // Send updated user list to all clients
+  // Store user socket ID
+  connectedUsers[username] = socket.id;
 
-    // Handle Sending Messages
-    socket.on("send-message", ({ recipient, message }) => {
-        const recipientSocketId = connectedUsers[recipient];
+  // Handle Sending Messages
+  socket.on("send-message", ({ recipient, message }) => {
+    const recipientSocketId = connectedUsers[recipient];
 
-        if (recipientSocketId) {
-            io.to(recipientSocketId).emit("receive-message", {
-                user: username,
-                message
-            });
-            console.log(`📩 Message from ${username} to ${recipient}: ${message}`);
-        } else {
-            console.log(`⚠️ User ${recipient} is not online`);
-        }
-    });
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("receive-message", {
+        sendBy: username,
+        recBy: recipient,
+        message: message,
+        createdAt: new Date(),
+      });
+      console.log(`📩 Message from ${username} to ${recipient}: ${message}`);
+    } else {
+      console.log(`⚠️ User ${recipient} is not online`);
+    }
+  });
 
-    // Handle User Disconnect
-    socket.on("disconnect", () => {
-        console.log(`❌ User Disconnected: ${username}`);
-        delete connectedUsers[username]; // Remove user from list
-        io.emit("update-user-list", Object.keys(connectedUsers)); // Update user list
-    });
+  // Handle User Disconnect
+  socket.on("disconnect", () => {
+    console.log(`❌ User Disconnected: ${username}`);
+    delete connectedUsers[username]; // Remove user from list
+  });
 });

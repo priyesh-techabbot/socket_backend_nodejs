@@ -23,6 +23,7 @@ router.post("/login", async (request, response, next) => {
       message: "Login successfully",
       data: {
         access_token: token,
+        username: username,
       },
     });
   } catch (error) {
